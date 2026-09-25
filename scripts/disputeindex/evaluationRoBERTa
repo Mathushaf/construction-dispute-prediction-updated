@@ -1,0 +1,152 @@
+# DisputeIndex Evaluation Script (RoBERTa)
+# ====================================================
+
+import os
+from pathlib import Path
+import pandas as pd
+import numpy as np
+from datetime import datetime
+
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    classification_report, confusion_matrix, ConfusionMatrixDisplay
+)
+
+import matplotlib
+matplotlib.use("Agg")  # Non-interactive backend for saving plots
+import matplotlib.pyplot as plt
+from openpyxl.drawing.image import Image as XLImage
+from openpyxl import load_workbook
+
+# -----------------------------
+# Config
+# -----------------------------
+MODEL_DIR = Path(r"C:\Users\mathu\ML Model\Development1\DisputeIndex")
+INPUT_FILE = MODEL_DIR / "DisputeIndex_Testing_PredictionsRoBERTa.xlsx"
+
+
+OUT_DIR = Path(r"C:\Users\mathu\ML Model\Development1\DisputeIndex\Evaluation")
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+EVAL_XLSX = OUT_DIR / "DisputeIndex_RoBERTa_Evaluation_Report.xlsx"
+CM_PNG = OUT_DIR / "ConfusionMatrix_RoBERTa.png"
+CM_NORM_PNG = OUT_DIR / "ConfusionMatrix_Normalized_RoBERTa.png"
+
+TEXT_COL = "Input Feature"
+GT_COL = "Correct Classification"
+PRED_COL = "Predicted_DisputeIndex(1-5)"
+
+# -----------------------------
+# Helper: Auto-fit Excel columns
+# -----------------------------
+def autofit_columns(ws, max_width=60):
+    for col in ws.columns:
+        try:
+            col_letter = col[0].column_letter
+        except Exception:
+            continue
+        max_len = 0
+        for cell in col:
+            val = "" if cell.value is None else str(cell.value)
+            max_len = max(max_len, len(val))
+        ws.column_dimensions[col_letter].width = min(max_len + 2, max_width)
+
+# -----------------------------
+# Load data
+# -----------------------------
+if not INPUT_FILE.exists():
+    raise FileNotFoundError(f"❌ Input file not found:\n{INPUT_FILE}")
+
+df = pd.read_excel(INPUT_FILE)
+print(f" Loaded file: {INPUT_FILE}")
+print(f"Rows: {len(df)}")
+
+if GT_COL not in df.columns or PRED_COL not in df.columns:
+    raise ValueError(f"❌ Columns '{GT_COL}' and '{PRED_COL}' must exist in file.")
+
+# Clean + prepare
+df[GT_COL] = pd.to_numeric(df[GT_COL], errors="coerce")
+df[PRED_COL] = pd.to_numeric(df[PRED_COL], errors="coerce")
+
+valid_mask = df[GT_COL].notna() & df[PRED_COL].notna()
+y_true = df.loc[valid_mask, GT_COL].astype(int).tolist()
+y_pred = df.loc[valid_mask, PRED_COL].astype(int).tolist()
+
+print(f" Valid rows for evaluation: {len(y_true)}")
+
+# -----------------------------
+# Compute metrics
+# -----------------------------
+overall = {
+    "Accuracy": accuracy_score(y_true, y_pred),
+    "Precision (macro)": precision_score(y_true, y_pred, average="macro", zero_division=0),
+    "Recall (macro)": recall_score(y_true, y_pred, average="macro", zero_division=0),
+    "F1-Score (macro)": f1_score(y_true, y_pred, average="macro", zero_division=0),
+    "Precision (weighted)": precision_score(y_true, y_pred, average="weighted", zero_division=0),
+    "Recall (weighted)": recall_score(y_true, y_pred, average="weighted", zero_division=0),
+    "F1-Score (weighted)": f1_score(y_true, y_pred, average="weighted", zero_division=0),
+}
+overall_df = pd.DataFrame(overall.items(), columns=["Metric", "Value"])
+
+# Classification report (per class)
+report_dict = classification_report(y_true, y_pred, output_dict=True, zero_division=0)
+per_class_df = (
+    pd.DataFrame(report_dict)
+    .T.reset_index()
+    .rename(columns={"index": "Label"})
+)
+per_class_df = per_class_df[["Label", "precision", "recall", "f1-score", "support"]]
+
+# -----------------------------
+# Confusion Matrices
+# -----------------------------
+labels_sorted = sorted(list(set(y_true + y_pred)))
+cm = confusion_matrix(y_true, y_pred, labels=labels_sorted)
+
+# Raw matrix
+fig, ax = plt.subplots(figsize=(8, 6))
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels_sorted)
+disp.plot(cmap="Blues", ax=ax, colorbar=True, xticks_rotation=45)
+ax.set_title("Confusion Matrix - RoBERTa (Labels 1–5)")
+plt.tight_layout()
+fig.savefig(CM_PNG, dpi=200)
+plt.close(fig)
+
+# Normalized matrix (row-wise)
+cm_norm = cm.astype(float)
+row_sums = cm_norm.sum(axis=1, keepdims=True)
+row_sums[row_sums == 0] = 1.0
+cm_norm /= row_sums
+
+fig2, ax2 = plt.subplots(figsize=(8, 6))
+disp2 = ConfusionMatrixDisplay(confusion_matrix=cm_norm, display_labels=labels_sorted)
+disp2.plot(cmap="Greens", ax=ax2, colorbar=True, xticks_rotation=45)
+ax2.set_title("Normalized Confusion Matrix - RoBERTa")
+plt.tight_layout()
+fig2.savefig(CM_NORM_PNG, dpi=200)
+plt.close(fig2)
+
+# -----------------------------
+# Write Excel report
+# -----------------------------
+with pd.ExcelWriter(EVAL_XLSX, engine="openpyxl") as writer:
+    df[[TEXT_COL, GT_COL, PRED_COL]].to_excel(writer, sheet_name="Predictions", index=False)
+    overall_df.to_excel(writer, sheet_name="Overall Metrics", index=False)
+    per_class_df.to_excel(writer, sheet_name="Per Class Report", index=False)
+
+    wb = writer.book
+    if CM_PNG.exists():
+        ws_img = wb.create_sheet("Confusion Matrix")
+        ws_img.add_image(XLImage(str(CM_PNG)), "A1")
+    if CM_NORM_PNG.exists():
+        ws_imgn = wb.create_sheet("Confusion Matrix Normalized")
+        ws_imgn.add_image(XLImage(str(CM_NORM_PNG)), "A1")
+
+    for sheet in ["Predictions", "Overall Metrics", "Per Class Report"]:
+        ws = wb[sheet]
+        autofit_columns(ws)
+
+print("\n Evaluation complete!")
+print(f" Metrics file saved to: {EVAL_XLSX}")
+print(f" Confusion matrices saved as: {CM_PNG.name}, {CM_NORM_PNG.name}")
+print(f" Rows evaluated: {len(y_true)}")
