@@ -55,14 +55,14 @@ def autofit_columns(ws, max_width=60):
 # Load data
 # -----------------------------
 if not INPUT_FILE.exists():
-    raise FileNotFoundError(f"❌ Input file not found:\n{INPUT_FILE}")
+    raise FileNotFoundError(f" Input file not found:\n{INPUT_FILE}")
 
 df = pd.read_excel(INPUT_FILE)
 print(f" Loaded file: {INPUT_FILE}")
 print(f"Rows: {len(df)}")
 
 if GT_COL not in df.columns or PRED_COL not in df.columns:
-    raise ValueError(f"❌ Columns '{GT_COL}' and '{PRED_COL}' must exist in file.")
+    raise ValueError(f" Columns '{GT_COL}' and '{PRED_COL}' must exist in file.")
 
 # Clean + prepare
 df[GT_COL] = pd.to_numeric(df[GT_COL], errors="coerce")
