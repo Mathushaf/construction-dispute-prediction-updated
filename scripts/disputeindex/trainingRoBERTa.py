@@ -62,7 +62,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 # Dataset class
 # -----------------------------
 class DisputeDataset(Dataset):
-    def __init__(self, texts, labels, tokenizer, max_length=256):
+    def __init__(self, texts, labels, tokenizer, max_length=512):
         self.encodings = tokenizer(
             texts,
             truncation=True,
