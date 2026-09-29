@@ -1,0 +1,1199 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox | ProjectConnect{% endblock %}
+
+{% block content %}
+
+<div class="sidebar">
+
+  <div class="sidebar-section">
+    <h3 class="sidebar-heading">Inbox</h3>
+
+    <ul class="sidebar-menu">
+      <li class="active">
+        <span>Inbox</span>
+        <span class="badge">1</span>
+      </li>
+
+      <li>
+        <span>Sent</span>
+        <span class="badge">1</span>
+      </li>
+
+      <li>
+        <span>Draft</span>
+        <span class="badge">0</span>
+      </li>
+
+      <li>
+        <span>Outbox</span>
+        <span class="badge">0</span>
+      </li>
+    </ul>
+  </div>
+
+
+  <div class="sidebar-section">
+
+    <h4 class="sidebar-subheading">
+      All Categories
+    </h4>
+
+    <ul class="sidebar-menu small">
+
+      <li class="active">
+        <span>Email</span>
+        <span class="badge">1</span>
+      </li>
+
+      <li>
+        <span>Advice</span>
+        <span class="badge">1</span>
+      </li>
+
+      <li>
+        <span>Document Transmittal</span>
+        <span class="badge">0</span>
+      </li>
+
+      <li>
+        <span>Request for Approval</span>
+        <span class="badge">0</span>
+      </li>
+
+      <li>
+        <span>Request for Information</span>
+        <span class="badge">0</span>
+      </li>
+
+      <li>
+        <span>Shop Drawing Review</span>
+        <span class="badge">0</span>
+      </li>
+
+      <li>
+        <span>Workflow Transmittal</span>
+        <span class="badge">0</span>
+      </li>
+
+    </ul>
+
+  </div>
+
+</div>
+
+
+<div class="main">
+
+  <!-- ==================================================
+       Toolbar
+       ================================================== -->
+
+  <div class="toolbar">
+
+    <div class="toolbar-left">
+
+      <button
+        class="send-btn"
+        type="button"
+      >
+
+        <span class="send-icon">
+          ✈️
+        </span>
+
+        <span>
+          Send
+        </span>
+
+        <span class="dropdown-arrow">
+          ▼
+        </span>
+
+      </button>
+
+    </div>
+
+
+    <div class="toolbar-right">
+
+      <input
+        class="search-input"
+        placeholder="Search by Email Subject"
+      />
+
+      <button
+        class="toolbar-button"
+        type="button"
+      >
+        Filter
+      </button>
+
+      <button
+        class="toolbar-button"
+        type="button"
+      >
+        Clear filters
+      </button>
+
+      <button
+        class="toolbar-button"
+        type="button"
+      >
+        Reports
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div class="email-layout">
+
+    <!-- ==================================================
+         CENTER: EMAIL FORM
+         ================================================== -->
+
+    <div class="email-panel">
+
+      <div class="email-header-strip">
+
+        <span>&nbsp;</span>
+        <span>&nbsp;</span>
+
+      </div>
+
+
+      <form
+        class="email-form"
+        method="POST"
+        action="{{ url_for('home') }}"
+      >
+
+        <!-- To -->
+
+        <div class="field-row">
+
+          <label>
+            To
+          </label>
+
+          <input
+            type="text"
+            name="to"
+            value="{{ email.to }}"
+          />
+
+        </div>
+
+
+        <!-- CC -->
+
+        <div class="field-row">
+
+          <label>
+            Cc
+          </label>
+
+          <input
+            type="text"
+            name="cc"
+            placeholder="Add Cc"
+          />
+
+        </div>
+
+
+        <!-- BCC -->
+
+        <div class="field-row">
+
+          <label>
+            Bcc
+          </label>
+
+          <input
+            type="text"
+            name="bcc"
+            placeholder="Add Bcc"
+          />
+
+        </div>
+
+
+        <!-- Subject -->
+
+        <div class="field-row">
+
+          <label>
+            Subject
+          </label>
+
+          <input
+            type="text"
+            name="subject"
+            value="{{ email.subject }}"
+          />
+
+        </div>
+
+
+        <!-- ==================================================
+             DESCRIPTION / INCIDENT INPUT
+             ================================================== -->
+
+        <div class="field-row column">
+
+          <label>
+            Description
+          </label>
+
+          <textarea
+            id="description"
+            name="description"
+            rows="10"
+            placeholder="Enter project communication here. Press Ctrl + Enter to add a new incident."
+          >{{ email.description }}</textarea>
+
+          <div class="incident-tip">
+            Tip:
+            Press
+            <strong>Ctrl + Enter</strong>
+            to create a new incident.
+          </div>
+
+        </div>
+
+
+        <!-- Attachments -->
+
+        <div class="field-row">
+
+          <label>
+            Attachments
+          </label>
+
+          <div class="attachment-box">
+            Drag &amp; drop files here …
+          </div>
+
+        </div>
+
+
+        <!-- Actions -->
+
+        <div class="form-actions">
+
+          <button
+            type="submit"
+            class="primary"
+          >
+            Dispute Prediction
+          </button>
+
+          <button
+            type="button"
+            id="discard-btn"
+          >
+            Discard
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+
+    <!-- ==================================================
+         RIGHT: ANALYSIS PANEL
+         ================================================== -->
+
+    <aside class="analysis-panel">
+
+      {% set has_analysis =
+          analysis.score is not none
+          or
+          (analysis.incidents and analysis.incidents|length > 0)
+      %}
+
+
+      <div
+        class="analysis-card{% if not has_analysis %} hidden{% endif %}"
+        id="analysis-card"
+      >
+
+        <h3 class="report-title">
+          📑 Dispute Prediction Report
+        </h3>
+
+
+        <!-- ==================================================
+             OVERALL DISPUTE INDEX
+             Highest index among all incidents
+             ================================================== -->
+
+        <button
+          class="analysis-btn unified-btn"
+          type="button"
+        >
+          Overall Dispute Index
+        </button>
+
+
+        {% set score_value =
+            analysis.score
+            if analysis.score is not none
+            else 0
+        %}
+
+
+        {% if analysis.score is not none %}
+
+          {% set angle_score =
+              analysis.score
+          %}
+
+          {% if angle_score < 1 %}
+
+            {% set angle_score = 1 %}
+
+          {% elif angle_score > 5 %}
+
+            {% set angle_score = 5 %}
+
+          {% endif %}
+
+
+          {% set adjusted_score =
+              angle_score - 1
+          %}
+
+
+          {% set needle_angle =
+              -90
+              +
+              (adjusted_score * 36)
+              +
+              18
+          %}
+
+        {% else %}
+
+          {% set needle_angle = -72 %}
+
+        {% endif %}
+
+
+        <div class="unified-box">
+
+          <div class="gauge-wrapper">
+
+            <svg
+              class="gauge-svg"
+              viewBox="0 0 200 120"
+            >
+
+              <!-- Background semicircle -->
+
+              <path
+                d="M20,100 A80,80 0 0,1 180,100"
+                fill="none"
+                stroke="#e0e0e0"
+                stroke-width="18"
+              />
+
+
+              <!-- 5 Colour Segments -->
+
+              <path
+                d="M20,100 A80,80 0 0,1 35.3,53.0"
+                fill="none"
+                stroke="#4CAF50"
+                stroke-width="18"
+              />
+
+              <path
+                d="M35.3,53.0 A80,80 0 0,1 75.3,23.9"
+                fill="none"
+                stroke="#8BC34A"
+                stroke-width="18"
+              />
+
+              <path
+                d="M75.3,23.9 A80,80 0 0,1 124.7,23.9"
+                fill="none"
+                stroke="#FFEB3B"
+                stroke-width="18"
+              />
+
+              <path
+                d="M124.7,23.9 A80,80 0 0,1 164.7,53.0"
+                fill="none"
+                stroke="#FF9800"
+                stroke-width="18"
+              />
+
+              <path
+                d="M164.7,53.0 A80,80 0 0,1 180,100"
+                fill="none"
+                stroke="#F44336"
+                stroke-width="18"
+              />
+
+
+              <!-- Needle -->
+
+              <line
+                x1="100"
+                y1="100"
+                x2="100"
+                y2="30"
+                stroke="#555555"
+                stroke-width="4"
+                stroke-linecap="round"
+                transform="rotate({{ needle_angle }} 100 100)"
+              />
+
+
+              <circle
+                cx="100"
+                cy="100"
+                r="5"
+                fill="#555555"
+              />
+
+            </svg>
+
+
+            <div class="gauge-value">
+
+              {% if analysis.score is not none %}
+
+                {{ analysis.score }}
+
+              {% else %}
+
+                --
+
+              {% endif %}
+
+            </div>
+
+          </div>
+
+
+          {% if analysis.level %}
+
+            <div class="gauge-level">
+
+              <span
+                class="gauge-dot"
+                style="
+                  background-color:
+
+                  {% if score_value == 1 %}
+                    #4CAF50
+
+                  {% elif score_value == 2 %}
+                    #8BC34A
+
+                  {% elif score_value == 3 %}
+                    #FFEB3B
+
+                  {% elif score_value == 4 %}
+                    #FF9800
+
+                  {% elif score_value == 5 %}
+                    #F44336
+
+                  {% else %}
+                    #999999
+
+                  {% endif %};
+                "
+              >
+              </span>
+
+              {{ analysis.level }}
+              –
+              {{ analysis.level_description }}
+
+            </div>
+
+          {% endif %}
+
+        </div>
+
+
+        <!-- ==================================================
+             INCIDENT LEVEL ANALYSIS
+             ================================================== -->
+
+        {% if analysis.incidents %}
+
+          <button
+            class="analysis-btn unified-btn"
+            type="button"
+          >
+            Incident Analysis
+          </button>
+
+
+          <div class="incident-table-wrapper">
+
+            <table class="incident-table">
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Incident
+                  </th>
+
+                  <th>
+                    Dispute Index
+                  </th>
+
+                  <th>
+                    Dispute Type
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody>
+
+                {% for incident in analysis.incidents %}
+
+                  <tr>
+
+                    <!-- Incident Text -->
+
+                    <td class="incident-text">
+
+                      <div class="incident-number">
+
+                        Incident
+                        {{ incident.incident_number }}
+
+                      </div>
+
+                      <div>
+
+                        {{ incident.text }}
+
+                      </div>
+
+                    </td>
+
+
+                    <!-- Incident Index -->
+
+                    <td class="incident-index">
+
+                      <span
+                        class="
+                          index-badge
+
+                          {% if incident.score == 1 %}
+                            index-1
+
+                          {% elif incident.score == 2 %}
+                            index-2
+
+                          {% elif incident.score == 3 %}
+                            index-3
+
+                          {% elif incident.score == 4 %}
+                            index-4
+
+                          {% elif incident.score == 5 %}
+                            index-5
+
+                          {% endif %}
+                        "
+                      >
+
+                        {{ incident.score }}
+
+                      </span>
+
+                    </td>
+
+
+                    <!-- Incident Dispute Type -->
+
+                    <td class="incident-type">
+
+                      {{ incident.classification }}
+
+                    </td>
+
+                  </tr>
+
+                {% endfor %}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        {% endif %}
+
+      </div>
+
+    </aside>
+
+  </div>
+
+</div>
+
+
+<!-- ======================================================
+     JAVASCRIPT
+     ====================================================== -->
+
+<script>
+
+  // ==================================================
+  // CTRL + ENTER
+  // INSERT NEW INCIDENT MARKER
+  // ==================================================
+
+  const descriptionBox =
+      document.getElementById(
+        "description"
+      );
+
+
+  if (descriptionBox) {
+
+    descriptionBox.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (
+          event.ctrlKey
+          &&
+          event.key === "Enter"
+        ) {
+
+          event.preventDefault();
+
+
+          const marker =
+              "\n\n===NEW INCIDENT===\n\n";
+
+
+          const start =
+              descriptionBox.selectionStart;
+
+
+          const end =
+              descriptionBox.selectionEnd;
+
+
+          const currentText =
+              descriptionBox.value;
+
+
+          descriptionBox.value =
+
+              currentText.substring(
+                0,
+                start
+              )
+
+              +
+
+              marker
+
+              +
+
+              currentText.substring(
+                end
+              );
+
+
+          const newPosition =
+              start
+              +
+              marker.length;
+
+
+          descriptionBox.selectionStart =
+              newPosition;
+
+
+          descriptionBox.selectionEnd =
+              newPosition;
+
+
+          descriptionBox.focus();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ==================================================
+  // DISCARD BUTTON
+  // ==================================================
+
+  const discardButton =
+      document.getElementById(
+        "discard-btn"
+      );
+
+
+  if (discardButton) {
+
+    discardButton.addEventListener(
+      "click",
+      () => {
+
+        const ta =
+            document.querySelector(
+              "textarea[name='description']"
+            );
+
+
+        if (ta) {
+
+          ta.value = "";
+
+        }
+
+
+        const analysisCard =
+            document.getElementById(
+              "analysis-card"
+            );
+
+
+        if (analysisCard) {
+
+          analysisCard.classList.add(
+            "hidden"
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+</script>
+
+
+<!-- ======================================================
+     CSS
+     ====================================================== -->
+
+<style>
+
+  /* ================================================
+     SEND BUTTON
+     ================================================ */
+
+  .send-btn {
+
+    background-color: #8B1C3E;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 4px;
+
+    display: flex;
+
+    align-items: center;
+
+    padding: 8px 14px;
+
+    font-weight: 600;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    gap: 6px;
+
+  }
+
+
+  .send-btn:hover {
+
+    background-color: #a22248;
+
+  }
+
+
+  .send-icon {
+
+    font-size: 16px;
+
+  }
+
+
+  .dropdown-arrow {
+
+    font-size: 10px;
+
+    margin-left: 5px;
+
+  }
+
+
+  /* ================================================
+     REPORT TITLE
+     ================================================ */
+
+  .report-title {
+
+    text-align: center;
+
+    font-size: 18px;
+
+    color: #1E3A5F;
+
+    font-weight: 700;
+
+    margin-bottom: 12px;
+
+    border-bottom:
+      2px solid #1E3A5F;
+
+    padding-bottom: 6px;
+
+  }
+
+
+  /* ================================================
+     SECTION BUTTON
+     ================================================ */
+
+  .unified-btn {
+
+    background-color: #1E3A5F;
+
+    color: white;
+
+    border: none;
+
+    width: 100%;
+
+    text-align: center;
+
+    padding: 10px 0;
+
+    border-radius: 4px;
+
+    font-weight: 600;
+
+    font-size: 14px;
+
+    margin-top: 12px;
+
+  }
+
+
+  /* ================================================
+     CONTENT BOX
+     ================================================ */
+
+  .unified-box {
+
+    background-color: #f1f1f1;
+
+    color: #000;
+
+    padding: 10px;
+
+    border-radius: 4px;
+
+    margin-bottom: 10px;
+
+    font-size: 14px;
+
+    line-height: 1.4;
+
+  }
+
+
+  /* ================================================
+     ANALYSIS CARD
+     ================================================ */
+
+  .analysis-card {
+
+    background: #ffffff;
+
+    border-radius: 6px;
+
+    padding: 15px;
+
+    box-shadow:
+      0 0 6px
+      rgba(
+        0,
+        0,
+        0,
+        0.08
+      );
+
+  }
+
+
+  .hidden {
+
+    display: none;
+
+  }
+
+
+  /* ================================================
+     GAUGE
+     ================================================ */
+
+  .gauge-wrapper {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 6px;
+
+  }
+
+
+  .gauge-svg {
+
+    width: 100%;
+
+    max-width: 220px;
+
+  }
+
+
+  .gauge-value {
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    color: #1F4E79;
+
+  }
+
+
+  .gauge-level {
+
+    margin-top: 4px;
+
+    font-size: 13px;
+
+    color: #333;
+
+    text-align: center;
+
+  }
+
+
+  .gauge-dot {
+
+    display: inline-block;
+
+    width: 16px;
+
+    height: 16px;
+
+    border-radius: 50%;
+
+    margin-right: 6px;
+
+    vertical-align: middle;
+
+  }
+
+
+  /* ================================================
+     INCIDENT INPUT TIP
+     ================================================ */
+
+  .incident-tip {
+
+    margin-top: 5px;
+
+    font-size: 12px;
+
+    color: #666;
+
+  }
+
+
+  /* ================================================
+     INCIDENT TABLE
+     ================================================ */
+
+  .incident-table-wrapper {
+
+    margin-top: 8px;
+
+    overflow-x: auto;
+
+  }
+
+
+  .incident-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    background-color: white;
+
+    font-size: 12px;
+
+  }
+
+
+  .incident-table th {
+
+    background-color: #1E3A5F;
+
+    color: white;
+
+    padding: 8px;
+
+    text-align: left;
+
+    border:
+      1px solid #d6d6d6;
+
+  }
+
+
+  .incident-table td {
+
+    padding: 8px;
+
+    border:
+      1px solid #d6d6d6;
+
+    vertical-align: top;
+
+  }
+
+
+  .incident-text {
+
+    width: 55%;
+
+    line-height: 1.4;
+
+  }
+
+
+  .incident-number {
+
+    font-weight: 700;
+
+    color: #1E3A5F;
+
+    margin-bottom: 5px;
+
+  }
+
+
+  .incident-index {
+
+    width: 15%;
+
+    text-align: center;
+
+  }
+
+
+  .incident-type {
+
+    width: 30%;
+
+    font-weight: 600;
+
+  }
+
+
+  /* ================================================
+     INDEX BADGES
+     ================================================ */
+
+  .index-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 30px;
+
+    height: 30px;
+
+    border-radius: 50%;
+
+    color: white;
+
+    font-weight: 700;
+
+  }
+
+
+  .index-1 {
+
+    background-color: #4CAF50;
+
+  }
+
+
+  .index-2 {
+
+    background-color: #8BC34A;
+
+  }
+
+
+.index-3 {
+    background-color: #FFEB3B;
+    color: #000;
+}
+
+
+  .index-4 {
+
+    background-color: #FF9800;
+
+  }
+
+
+  .index-5 {
+
+    background-color: #F44336;
+
+  }
+
+</style>
+
+{% endblock %}
