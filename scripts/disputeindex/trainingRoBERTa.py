@@ -1,3 +1,4 @@
+# ====================================================
 # DisputeIndex Model - RoBERTa-base Fine-Tuning
 # WITH Validation + Logging
 # Model Name: DisputeIndex_RoBERTa_Base
@@ -37,7 +38,7 @@ df = df.dropna(subset=required_cols)
 df["Target Feature"] = df["Target Feature"].astype(int)
 df["label_id"] = df["Target Feature"] - 1
 
-print("Data loaded")
+print("✅ Data loaded")
 
 # -----------------------------
 # Label mapping
@@ -62,7 +63,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 # Dataset class
 # -----------------------------
 class DisputeDataset(Dataset):
-    def __init__(self, texts, labels, tokenizer, max_length=512):
+    def __init__(self, texts, labels, tokenizer, max_length=256):
         self.encodings = tokenizer(
             texts,
             truncation=True,
@@ -221,4 +222,4 @@ torch.save(
     os.path.join(save_dir, "label_mappings.pt")
 )
 
-print(f"Model saved to: {save_dir}")
+print(f"✅ Model saved to: {save_dir}")
