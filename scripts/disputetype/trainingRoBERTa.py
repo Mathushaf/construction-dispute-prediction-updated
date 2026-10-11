@@ -24,7 +24,7 @@ SAVE_DIR = "./dispute_classification_roberta"
 BATCH_SIZE = 8
 EPOCHS = 5
 LR = 2e-5
-MAX_LEN = 512
+MAX_LEN = 256
 TEST_SIZE = 0.2
 SEED = 42
 
@@ -44,7 +44,7 @@ id2label = {i: label for label, i in label2id.items()}
 
 df['label_id'] = df['Target Feature'].astype(str).map(label2id).astype(int)
 
-print(" Labels:", label2id)
+print("🟩 Labels:", label2id)
 
 # -----------------------------
 # Train/validation split
@@ -120,7 +120,7 @@ scheduler = get_linear_schedule_with_warmup(
 )
 
 # -----------------------------
-#  Track logs
+# Track logs
 # -----------------------------
 train_losses = []
 val_losses = []
@@ -204,7 +204,7 @@ log_df = pd.DataFrame({
 
 log_df.to_excel("DisputeType_RoBERTa_training_logs.xlsx", index=False)
 
-print(" Training logs saved!")
+print("Training logs saved!")
 
 # -----------------------------
 # Save model
@@ -213,4 +213,4 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 model.save_pretrained(SAVE_DIR)
 tokenizer.save_pretrained(SAVE_DIR)
 
-print(f" Model saved to: {SAVE_DIR}")
+print(f"✅ Model saved to: {SAVE_DIR}")
