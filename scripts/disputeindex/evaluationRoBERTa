@@ -1,3 +1,4 @@
+# ====================================================
 # DisputeIndex Evaluation Script (RoBERTa)
 # ====================================================
 
@@ -55,14 +56,14 @@ def autofit_columns(ws, max_width=60):
 # Load data
 # -----------------------------
 if not INPUT_FILE.exists():
-    raise FileNotFoundError(f" Input file not found:\n{INPUT_FILE}")
+    raise FileNotFoundError(f"❌ Input file not found:\n{INPUT_FILE}")
 
 df = pd.read_excel(INPUT_FILE)
-print(f" Loaded file: {INPUT_FILE}")
+print(f"Loaded file: {INPUT_FILE}")
 print(f"Rows: {len(df)}")
 
 if GT_COL not in df.columns or PRED_COL not in df.columns:
-    raise ValueError(f" Columns '{GT_COL}' and '{PRED_COL}' must exist in file.")
+    raise ValueError(f"❌ Columns '{GT_COL}' and '{PRED_COL}' must exist in file.")
 
 # Clean + prepare
 df[GT_COL] = pd.to_numeric(df[GT_COL], errors="coerce")
@@ -72,7 +73,7 @@ valid_mask = df[GT_COL].notna() & df[PRED_COL].notna()
 y_true = df.loc[valid_mask, GT_COL].astype(int).tolist()
 y_pred = df.loc[valid_mask, PRED_COL].astype(int).tolist()
 
-print(f" Valid rows for evaluation: {len(y_true)}")
+print(f"Valid rows for evaluation: {len(y_true)}")
 
 # -----------------------------
 # Compute metrics
@@ -146,7 +147,7 @@ with pd.ExcelWriter(EVAL_XLSX, engine="openpyxl") as writer:
         ws = wb[sheet]
         autofit_columns(ws)
 
-print("\n Evaluation complete!")
-print(f" Metrics file saved to: {EVAL_XLSX}")
-print(f" Confusion matrices saved as: {CM_PNG.name}, {CM_NORM_PNG.name}")
-print(f" Rows evaluated: {len(y_true)}")
+print("\nEvaluation complete!")
+print(f"Metrics file saved to: {EVAL_XLSX}")
+print(f"Confusion matrices saved as: {CM_PNG.name}, {CM_NORM_PNG.name}")
+print(f"Rows evaluated: {len(y_true)}")
