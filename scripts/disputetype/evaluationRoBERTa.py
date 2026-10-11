@@ -38,7 +38,7 @@ CM_PNG = OUT_DIR / "confusion_matrix_roberta.png"
 CM_NORM_PNG = OUT_DIR / "confusion_matrix_roberta_normalized.png"
 
 BATCH_SIZE = 32
-MAX_LEN = 512
+MAX_LEN = 256
 
 # =========================
 # Helpers
@@ -50,7 +50,7 @@ def save_excel_safely(df: pd.DataFrame, out_path: Path, **to_excel_kwargs):
     except PermissionError:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         fb = out_path.with_name(out_path.stem + f"_{ts}" + out_path.suffix)
-        print(f"⚠️ '{out_path.name}' is locked. Writing to '{fb.name}' instead.")
+        print(f" '{out_path.name}' is locked. Writing to '{fb.name}' instead.")
         df.to_excel(fb, index=False, **to_excel_kwargs)
 
 def autofit_columns(ws, max_width=80):
@@ -216,7 +216,7 @@ if GT_COL in test_df.columns:
         cm_norm_png=CM_NORM_PNG
     )
 
-    print("\n Wrote the following to Excel:")
+    print("\n✅ Wrote the following to Excel:")
     print(" - overall_metrics")
     print(" - confusion_matrix (numeric table)")
     print(" - per_class_report_with_accuracy (incl. per-class accuracy)")
@@ -225,4 +225,4 @@ if GT_COL in test_df.columns:
     print(f"→ {METRICS_XLSX}\n")
 
 else:
-    print(f" Ground-truth column '{GT_COL}' not found; only predictions were saved to {PREDICTIONS_XLSX}.")
+    print(f"ℹ️ Ground-truth column '{GT_COL}' not found; only predictions were saved to {PREDICTIONS_XLSX}.")
