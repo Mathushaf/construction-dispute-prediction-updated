@@ -216,7 +216,7 @@ if GT_COL in test_df.columns:
         cm_norm_png=CM_NORM_PNG
     )
 
-    print("\n✅ Wrote the following to Excel:")
+    print("\n Wrote the following to Excel:")
     print(" - overall_metrics")
     print(" - confusion_matrix (numeric table)")
     print(" - per_class_report_with_accuracy (incl. per-class accuracy)")
@@ -225,4 +225,4 @@ if GT_COL in test_df.columns:
     print(f"→ {METRICS_XLSX}\n")
 
 else:
-    print(f"ℹ️ Ground-truth column '{GT_COL}' not found; only predictions were saved to {PREDICTIONS_XLSX}.")
+    print(f" Ground-truth column '{GT_COL}' not found; only predictions were saved to {PREDICTIONS_XLSX}.")
